@@ -54,3 +54,25 @@ function mpd_custom_menu_init() {
     MPD_Shortcodes::init();
 }
 add_action('plugins_loaded', 'mpd_custom_menu_init');
+
+// === Chargement des scripts et styles ===
+function mpd_enqueue_scripts_styles() {
+    // 1. Charger le fichier CSS de base
+    wp_enqueue_style(
+        'mpd-styles',
+        MPD_PLUGIN_URL . 'assets/css/style.css',
+        [],
+        '1.0',
+        'all'
+    );
+
+    // 2. Si l’admin a saisi du CSS personnalisé, on l’injecte
+    $custom_css = get_option('mpd_custom_css', '');
+    if (!empty($custom_css)) {
+        wp_add_inline_style('mpd-styles', $custom_css);
+    }
+
+    // (Si besoin) Charger un script JS
+    // wp_enqueue_script('mpd-script', MPD_PLUGIN_URL . 'assets/js/script.js', ['jquery'], '1.0', true);
+}
+add_action('wp_enqueue_scripts', 'mpd_enqueue_scripts_styles');

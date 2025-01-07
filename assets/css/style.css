@@ -1,0 +1,59 @@
+/*
+ * Style de base pour le menu personnalisé MPD
+ * Exemple d’une structure simple avec un conteneur et logo
+ */
+
+/* Conteneur principal du menu */
+.mpd-menu-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8f8f8;
+  padding: 10px 20px;
+}
+
+/* Logo */
+.mpd-menu-logo {
+  display: flex;
+  align-items: center;
+}
+.mpd-menu-logo img {
+  max-height: 50px;
+  height: auto;
+  width: auto;
+}
+
+/* Items du menu */
+.mpd-menu-items {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mpd-menu-items li {
+  margin: 0 10px;
+}
+
+.mpd-menu-items a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Sous-menu */
+.mpd-sub-menu {
+  position: absolute;
+  background-color: #fff;
+  padding: 10px;
+  display: none;
+  list-style: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.mpd-menu-item:hover > .mpd-sub-menu {
+  display: block;
+}
+
+/* Hover */
+.mpd-menu-items a:hover {
+  color: #0073aa; /* Bleu WordPress */
+}

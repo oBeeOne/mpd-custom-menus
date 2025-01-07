@@ -91,7 +91,7 @@ function mpd_init_update_checker() {
 
     // 2. URL du repo GitHub. Le “slug” du plugin doit correspondre à ton folder
     $updateChecker = PucFactory::buildUpdateChecker(
-        'https://github.com/oBeeOne/mpd-custom-menus/',
+        'https://github.com/oBeeOne/mpd-custom-menus',
         $pluginFile,
         'mpd-custom-menu' // slug du plug-in
     );

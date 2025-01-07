@@ -80,7 +80,7 @@ class MPD_Metaboxes {
         // Charger notre script JS externe
         wp_enqueue_script(
             'menu-items-script',
-            MPD_PLUGIN_URL . 'assets/js/menu-items.js', // Chemin vers le fichier
+            MPD_PLUGIN_URL . 'assets/js/menu-items-mgr.js', // Chemin vers le fichier
             ['jquery', 'jquery-ui-sortable'],           // Dépendances
             '1.0',
             true                                        // in_footer = true

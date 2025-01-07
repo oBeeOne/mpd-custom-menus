@@ -7,6 +7,9 @@ class MPD_Metaboxes {
     public static function init() {
         add_action('add_meta_boxes', [__CLASS__, 'add_meta_boxes']);
         add_action('save_post_mpd_menu', [__CLASS__, 'save_mpd_menu_data']);
+
+        // Charger le JS/CSS en admin
+        add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_assets']);
     }
 
     public static function add_meta_boxes() {
@@ -64,37 +67,72 @@ class MPD_Metaboxes {
     }
 
     // --- Menu items Metabox ---
+    public static function enqueue_admin_assets($hook) {
+        global $post;
+        // Vérifier qu’on édite bien un CPT mpd_menu
+        if (!isset($post->post_type) || $post->post_type !== 'mpd_menu') {
+            return;
+        }
+
+        // Charger jQuery UI Sortable (inclus dans WP, on s’assure juste de l’appeler)
+        wp_enqueue_script('jquery-ui-sortable');
+
+        // Charger notre script JS externe
+        wp_enqueue_script(
+            'menu-items-script',
+            MPD_PLUGIN_URL . 'assets/js/menu-items.js', // Chemin vers le fichier
+            ['jquery', 'jquery-ui-sortable'],           // Dépendances
+            '1.0',
+            true                                        // in_footer = true
+        );
+    }
+
     public static function render_menu_items_metabox($post) {
-        // Récupère l'array stocké en JSON
+        // Récupère la meta '_mpd_menu_items'
         $items_data = get_post_meta($post->ID, '_mpd_menu_items', true);
         if (!is_array($items_data)) {
-            $items_data = array();
+            $items_data = [];
         }
-    
-        // On convertit l'array en JSON pour l'afficher dans le champ
-        $json_value = json_encode($items_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    
-        echo '<p>'.__('Saisissez la liste des éléments du menu au format JSON.', 'mpd-textdomain').'</p>';
-        echo '<textarea name="mpd_menu_items_json" rows="10" style="width:100%;">'
-             . esc_textarea($json_value)
-             . '</textarea>';
-    
-        // Exemple de structure attendue
-        echo '<p><em>'.__('Exemple', 'mpd-textdomain').':</em></p>';
-        echo '<pre>{
-      "items": [
-        {
-          "title": "Accueil",
-          "href": "/accueil",
-          "class": "lien-accueil"
-        },
-        {
-          "title": "Contact",
-          "href": "/contact",
-          "class": "lien-contact"
+
+        // Soit on stocke directement un array, soit $items_data['items'] = [...]
+        // Adapter selon ta structure
+        $items = (isset($items_data['items']) && is_array($items_data['items']))
+            ? $items_data['items']
+            : ( (is_array($items_data)) ? $items_data : [] );
+
+        echo '<p>'.__('Ajoutez/modifiez les éléments de votre menu. Glissez-déposez les lignes pour changer l’ordre.', 'mpd-textdomain').'</p>';
+
+        echo '<table class="widefat" id="mpd_menu_items_table">';
+        echo '<thead>
+                <tr>
+                  <th style="width:30px;"></th>
+                  <th>'.__('Titre', 'mpd-textdomain').'</th>
+                  <th>'.__('Lien', 'mpd-textdomain').'</th>
+                  <th>'.__('Classe CSS', 'mpd-textdomain').'</th>
+                  <th></th>
+                </tr>
+              </thead>';
+        echo '<tbody id="mpd_menu_items_tbody">';
+
+        if (!empty($items)) {
+            foreach ($items as $item) {
+                $title = isset($item['title']) ? esc_attr($item['title']) : '';
+                $href  = isset($item['href'])  ? esc_attr($item['href'])  : '';
+                $class = isset($item['class']) ? esc_attr($item['class']) : '';
+
+                echo '<tr class="mpd-menu-item-row">';
+                echo '  <td class="mpd-drag-handle" style="cursor:move;">&#x2630;</td>';
+                echo '  <td><input type="text" name="mpd_item_title[]" value="'.$title.'" placeholder="Titre" style="width:100%;" /></td>';
+                echo '  <td><input type="text" name="mpd_item_href[]" value="'.$href.'" placeholder="/lien-relatif" style="width:100%;" /></td>';
+                echo '  <td><input type="text" name="mpd_item_class[]" value="'.$class.'" placeholder="Classe CSS" style="width:100%;" /></td>';
+                echo '  <td><button type="button" class="button-link-delete mpd-remove-item" style="color:red;">X</button></td>';
+                echo '</tr>';
+            }
         }
-      ]
-    }</pre>';
+
+        echo '</tbody></table>';
+
+        echo '<br><button type="button" class="button" id="mpd_add_menu_item">'.__('Ajouter un élément', 'mpd-textdomain').'</button>';
     }
     
 
@@ -128,21 +166,35 @@ class MPD_Metaboxes {
         }
 
         // Menu items
-        // Récupération du JSON
-        if (isset($_POST['mpd_menu_items_json'])) {
-            $json_str = wp_unslash($_POST['mpd_menu_items_json']); // Nettoyer les slashes
-            $decoded  = json_decode($json_str, true);
-
-            // S'assurer que c’est un tableau
-            if (is_array($decoded)) {
-                update_post_meta($post_id, '_mpd_menu_items', $decoded);
-            } else {
-                // Erreur de parsing => on peut décider de ne rien enregistrer ou vider
-                // update_post_meta($post_id, '_mpd_menu_items', array());
-            }
-        } else {
-            delete_post_meta($post_id, '_mpd_menu_items');
+        if (get_post_type($post_id) !== 'mpd_menu') {
+            return;
         }
+
+        // Récupérer les tableaux envoyés
+        $titles = isset($_POST['mpd_item_title']) ? (array) $_POST['mpd_item_title'] : [];
+        $hrefs  = isset($_POST['mpd_item_href'])  ? (array) $_POST['mpd_item_href']  : [];
+        $classes= isset($_POST['mpd_item_class']) ? (array) $_POST['mpd_item_class'] : [];
+
+        $items  = [];
+        $count  = count($titles);
+
+        for ($i=0; $i<$count; $i++) {
+            $t = sanitize_text_field($titles[$i]);
+            $h = sanitize_text_field($hrefs[$i]);
+            $c = sanitize_text_field($classes[$i]);
+
+            $items[] = [
+                'title' => $t,
+                'href'  => $h,
+                'class' => $c,
+            ];
+        }
+
+        // Stockage en JSON (ou array) dans la meta
+        $data_to_save = [
+            'items' => $items,
+        ];
+        update_post_meta($post_id, '_mpd_menu_items', $data_to_save);
 
         // User
         if (isset($_POST['mpd_menu_user'])) {

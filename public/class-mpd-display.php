@@ -10,6 +10,13 @@ class MPD_Display {
 
     public static function replace_menu_logic($args) {
         if (is_admin()) {
+            
+            // Vérifier si c’est le menu "primary"
+            if ( !isset($args['theme_location']) || $args['theme_location'] !== 'primary' ) {
+                // On ne touche pas aux autres menus
+                return $args;
+            }
+
             return $args; 
         }
 

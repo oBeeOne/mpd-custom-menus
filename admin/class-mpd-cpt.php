@@ -12,7 +12,17 @@ class MPD_CPT {
         $labels = array(
             'name'          => __('Menus Personnalisés', 'mpd-textdomain'),
             'singular_name' => __('Menu Personnalisé', 'mpd-textdomain'),
-            // ...
+            'menu_name'          => __('Menus Personnalisés', 'mpd-textdomain'),
+            'name_admin_bar'     => __('Menu Personnalisé', 'mpd-textdomain'),
+            'add_new'            => __('Ajouter un menu', 'mpd-textdomain'),
+            'add_new_item'       => __('Ajouter un élément de menu', 'mpd-textdomain'),
+            'edit_item'          => __('Éditer le menu', 'mpd-textdomain'),
+            'new_item'           => __('Nouveau menu', 'mpd-textdomain'),
+            'view_item'          => __('Voir le menu', 'mpd-textdomain'),
+            'search_items'       => __('Rechercher un menu', 'mpd-textdomain'),
+            'not_found'          => __('Aucun menu trouvé', 'mpd-textdomain'),
+            'not_found_in_trash' => __('Aucun menu dans la corbeille', 'mpd-textdomain'),
+            // etc...
         );
 
         $args = array(

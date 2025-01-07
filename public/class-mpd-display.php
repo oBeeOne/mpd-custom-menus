@@ -47,6 +47,47 @@ class MPD_Display {
             }
         }
 
+        // Imaginons qu’on a trouvé $menu_post (un objet WP_Post)
+        // On récupère les items
+        $menu_items = get_post_meta($menu_post->ID, '_mpd_menu_items', true);
+
+        if (is_array($menu_items) && isset($menu_items['items'])) {
+            // On fabrique le HTML
+            $html_output = '<div class="mpd-menu-container">';
+            
+            // (Optionnel) Affichage du logo :
+            $html_output .= '<div class="mpd-menu-logo">' . get_custom_logo() . '</div>';
+
+            $html_output .= '<ul class="mpd-menu-items">';
+            foreach ($menu_items['items'] as $item) {
+                $title = isset($item['title']) ? esc_html($item['title']) : '';
+                $href  = isset($item['href']) ? esc_url($item['href']) : '#';
+                $class = isset($item['class']) ? esc_attr($item['class']) : '';
+
+                $html_output .= '<li class="mpd-menu-item">';
+                $html_output .= '<a href="'.$href.'" class="'.$class.'">'.$title.'</a>';
+                $html_output .= '</li>';
+            }
+            $html_output .= '</ul></div>';
+
+            // On "injecte" ce HTML dans le rendu final
+            // Option 1 : on modifie $args['items_wrap'] ou on bypass l'appel normal de wp_nav_menu
+            // Option 2 : on renvoie le HTML et on court-circuite le menu WP
+            // Par ex. on peut stocker dans un static property 
+            //   et l'injecter via un hook plus tard.
+            // Pour la démo, on va le faire en "brut".
+            add_filter('wp_nav_menu_args', function($orig_args) use ($html_output) {
+                // On remplace tout par un "menu" factice qui ne fera rien
+                $orig_args['items_wrap'] = '<div style="display:none;"></div>';
+                return $orig_args;
+            }, 9999);
+
+            // On injecte un hook sur 'wp_nav_menu' pour remplacer la sortie
+            add_filter('pre_wp_nav_menu', function() use ($html_output) {
+                return $html_output; 
+            }, 9999);
+        }
+
         return $args;
     }
 }

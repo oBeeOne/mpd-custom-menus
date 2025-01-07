@@ -35,7 +35,7 @@ require_once MPD_PLUGIN_DIR . 'public/class-mpd-display.php';
 require_once MPD_PLUGIN_DIR . 'public/class-mpd-shortcodes.php'; // si vous gérez des shortcodes
 
 // Check auto de nouvelle version à mettre à jour depuis Github
-require_once MPD_PLUGIN_DIR . 'includes/plugin-update-checker/plugin-update-checker.php';
+require_once MPD_PLUGIN_DIR . 'includes/plugin-update-checker-master/plugin-update-checker.php';
 
 // ========== HOOKS D'ACTIVATION / DESACTIVATION ==========
 register_activation_hook(__FILE__, ['MPD_Activator', 'activate']);

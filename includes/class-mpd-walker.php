@@ -15,15 +15,16 @@ class MPD_CPT_Walker extends Walker_Nav_Menu {
         if (!empty($args->mpd_menu_post_id)) {
             $menu_post_id = $args->mpd_menu_post_id;
         } else {
-            // S’il n’est pas défini, on ne fait rien
-            return '';
+            // S’il n’est pas défini, on retourne le menu par défaut
+            return parent::walk($elements, $max_depth, $args);;
         }
 
         // Récupérer les items du CPT
         $items_data = get_post_meta($menu_post_id, '_mpd_menu_items', true);
         if (!is_array($items_data) || empty($items_data['items'])) {
-            // Pas d’items → rien à afficher
-            return '';
+            // Pas d’items → rien à afficher, on affiche le menu par défaut
+
+            return parent::walk($elements, $max_depth, $args);;
         }
 
         $items = $items_data['items']; // ex : array of [title, href, class]

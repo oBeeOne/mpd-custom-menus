@@ -12,7 +12,8 @@ class MPD_Admin {
 
     // 1. Création de la page d’options principale
     public static function add_menu_page() {
-        add_menu_page(
+        add_submenu_page(
+            'edit.php?post_type=mpd_menu', // Cible le menu 'Menu Personnalisés'
             __('MPD Custom Menu Settings', 'mpd-textdomain'),
             __('MPD Settings', 'mpd-textdomain'),
             'manage_options',

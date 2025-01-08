@@ -45,28 +45,8 @@ class MPD_Metaboxes {
     }
 
     // --- Pages Metabox ---
-    /* public static function render_pages_metabox($post) {
-        $selected_pages = get_post_meta($post->ID, '_mpd_menu_pages', true);
-        if (!is_array($selected_pages)) {
-            $selected_pages = array();
-        }
-
-        $pages = get_pages();
-
-        echo '<ul>';
-        foreach ($pages as $page) {
-            $checked = in_array($page->ID, $selected_pages) ? 'checked' : '';
-            echo '<li>';
-            echo '<label>';
-            echo '<input type="checkbox" name="mpd_menu_pages[]" value="' . esc_attr($page->ID) . '" ' . $checked . '>';
-            echo esc_html($page->post_title);
-            echo '</label>';
-            echo '</li>';
-        }
-        echo '</ul>';
-    } */
-
     public static function render_pages_metabox($post) {
+        // Récupérer l'ID de l'utilisateur connecté
         $current_user_id = get_current_user_id();
     
         // Récupérer uniquement les pages de l'utilisateur connecté
@@ -83,7 +63,7 @@ class MPD_Metaboxes {
     
         echo '<ul>';
     
-        // Afficher uniquement les pages de l'utilisateur connecté
+        // Afficher uniquement les pages de l'utilisateur connecté en version checkbox
         foreach ($user_pages as $page) {
             $checked = in_array($page->ID, $saved_pages) ? 'checked' : '';
             echo '<li>';
@@ -170,30 +150,19 @@ class MPD_Metaboxes {
 
     // --- User Metabox ---
     public static function render_user_metabox($post) {
-        /* $selected_user_id = get_post_meta($post->ID, '_mpd_menu_user', true);
-        
-        $users = get_users([
-            // Ajustez si besoin (par ex. exclure admin)
-        ]);
-
-        echo '<select name="mpd_menu_user" style="width:100%;">';
-        echo '<option value="">— Aucun —</option>';
-        foreach ($users as $user) {
-            $selected = selected($selected_user_id, $user->ID, false);
-            echo '<option value="' . esc_attr($user->ID) . '"' . $selected . '>';
-            echo esc_html($user->display_name);
-            echo '</option>';
-        }
-        echo '</select>'; */
-
+        // Récupérer l'utilisateur enregistré pour ce menu
         $current_user_id = get_current_user_id();
         $saved_user_id = get_post_meta($post->ID, '_mpd_menu_user', true);
 
         // Priorité : afficher l'utilisateur enregistré ou l'utilisateur connecté
         $user_id_to_display = $saved_user_id ?: $current_user_id;
 
+        // Récupérer les informations de l'utilisateur
+        $user_data = get_userdata($user_id_to_display);
+        $user_name = $user_data ? $user_data->display_name : __('Utilisateur inconnu', 'mpd-textdomain');
+
         echo '<label for="mpd_menu_user">' . __('Utilisateur assigné au menu :', 'mpd-textdomain') . '</label>';
-        echo '<input type="text" id="mpd_menu_user" name="mpd_menu_user" value="' . esc_attr($user_id_to_display->display_name) . '" readonly />';
+        echo '<input type="text" id="mpd_menu_user" name="mpd_menu_user" value="' . esc_attr($user_name) . '" readonly />';
     }
 
     // --- Save data ---

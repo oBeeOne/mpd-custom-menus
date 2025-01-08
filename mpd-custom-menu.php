@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MPD Custom Menu
  * Description: Crée et gère plusieurs menus personnalisés basés sur un Custom Post Type, avec règles d’affichage par pages et par auteur, adapté pour Divi.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: oBeeOne
  * Text Domain: mpd-textdomain
  */

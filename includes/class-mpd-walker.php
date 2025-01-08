@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class MPD_CPT_Walker extends Walker_Nav_Menu {
+class MPD_Custom_Menu_Walker extends Walker_Nav_Menu {
 
     // On va récupérer l’ID du CPT via $args dans la fonction "walk()"
     public function walk($elements, $max_depth) {

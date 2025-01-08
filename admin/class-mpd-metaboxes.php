@@ -45,7 +45,7 @@ class MPD_Metaboxes {
     }
 
     // --- Pages Metabox ---
-    public static function render_pages_metabox($post) {
+    /* public static function render_pages_metabox($post) {
         $selected_pages = get_post_meta($post->ID, '_mpd_menu_pages', true);
         if (!is_array($selected_pages)) {
             $selected_pages = array();
@@ -64,7 +64,39 @@ class MPD_Metaboxes {
             echo '</li>';
         }
         echo '</ul>';
+    } */
+
+    public static function render_pages_metabox($post) {
+        $current_user_id = get_current_user_id();
+    
+        // Récupérer uniquement les pages de l'utilisateur connecté
+        $user_pages = get_posts([
+            'post_type'      => 'page',
+            'post_status'    => ['publish', 'draft'],
+            'posts_per_page' => -1,
+            'author'         => $current_user_id,
+        ]);
+    
+        // Récupérer les pages déjà assignées au menu
+        $saved_pages = get_post_meta($post->ID, '_mpd_menu_pages', true);
+        $saved_pages = is_array($saved_pages) ? $saved_pages : [];
+    
+        echo '<ul>';
+    
+        // Afficher uniquement les pages de l'utilisateur connecté
+        foreach ($user_pages as $page) {
+            $checked = in_array($page->ID, $saved_pages) ? 'checked' : '';
+            echo '<li>';
+            echo '<label>';
+            echo '<input type="checkbox" name="mpd_menu_pages[]" value="' . esc_attr($page->ID) . '" ' . $checked . '>';
+            echo esc_html($page->post_title);
+            echo '</label>';
+            echo '</li>';
+        }
+    
+        echo '</ul>';
     }
+    
 
     // --- Menu items Metabox ---
     public static function enqueue_admin_assets($hook) {
@@ -138,7 +170,7 @@ class MPD_Metaboxes {
 
     // --- User Metabox ---
     public static function render_user_metabox($post) {
-        $selected_user_id = get_post_meta($post->ID, '_mpd_menu_user', true);
+        /* $selected_user_id = get_post_meta($post->ID, '_mpd_menu_user', true);
         
         $users = get_users([
             // Ajustez si besoin (par ex. exclure admin)
@@ -152,11 +184,40 @@ class MPD_Metaboxes {
             echo esc_html($user->display_name);
             echo '</option>';
         }
-        echo '</select>';
+        echo '</select>'; */
+
+        $current_user_id = get_current_user_id();
+        $saved_user_id = get_post_meta($post->ID, '_mpd_menu_user', true);
+
+        // Priorité : afficher l'utilisateur enregistré ou l'utilisateur connecté
+        $user_id_to_display = $saved_user_id ?: $current_user_id;
+
+        echo '<label for="mpd_menu_user">' . __('Utilisateur assigné au menu :', 'mpd-textdomain') . '</label>';
+        echo '<input type="text" id="mpd_menu_user" name="mpd_menu_user" value="' . esc_attr($user_id_to_display->display_name) . '" readonly />';
     }
 
     // --- Save data ---
     public static function save_mpd_menu_data($post_id) {
+        // Éviter les autosaves et autres
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        if (!isset($_POST['mpd_menu_nonce']) || !wp_verify_nonce($_POST['mpd_menu_nonce'], 'save_mpd_menu')) {
+            return;
+        }
+
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        // Attribuer automatiquement l'utilisateur connecté comme auteur
+        $current_user_id = get_current_user_id();
+        if ($current_user_id) {
+            update_post_meta($post_id, '_mpd_menu_user', $current_user_id);
+        }
+
+        
         // Pages
         if (isset($_POST['mpd_menu_pages'])) {
             $pages = array_map('intval', $_POST['mpd_menu_pages']);

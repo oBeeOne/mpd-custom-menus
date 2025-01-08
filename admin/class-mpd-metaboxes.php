@@ -45,7 +45,7 @@ class MPD_Metaboxes {
     }
 
     // --- Pages Metabox ---
-    public static function render_pages_metabox($post) {
+    /* public static function render_pages_metabox($post) {
         // Récupérer l'ID de l'utilisateur connecté
         $current_user_id = get_current_user_id();
     
@@ -75,7 +75,41 @@ class MPD_Metaboxes {
         }
     
         echo '</ul>';
+    } */
+
+    public static function render_pages_metabox($post) {
+        $current_user_id = get_current_user_id();
+
+        // Ajouter un nonce pour la sécurité
+        wp_nonce_field('save_mpd_menu', 'mpd_menu_nonce');
+    
+        // Récupérer uniquement les pages de l'utilisateur connecté
+        $user_pages = get_posts([
+            'post_type'      => 'page',
+            'post_status'    => ['publish', 'draft'],
+            'posts_per_page' => -1,
+            'author'         => $current_user_id,
+        ]);
+    
+        // Récupérer les pages déjà assignées au menu
+        $saved_pages = get_post_meta($post->ID, '_mpd_menu_pages', true);
+        $saved_pages = is_array($saved_pages) ? $saved_pages : [];
+    
+        echo '<label for="mpd_menu_pages">' . __('Sélectionnez les pages pour ce menu :', 'mpd-textdomain') . '</label>';
+        echo '<div id="mpd_menu_pages">';
+    
+        // Afficher uniquement les pages de l'utilisateur connecté sous forme de checkbox
+        foreach ($user_pages as $page) {
+            $checked = in_array($page->ID, $saved_pages) ? 'checked' : '';
+            echo '<label>';
+            echo '<input type="checkbox" name="mpd_menu_pages[]" value="' . esc_attr($page->ID) . '" ' . $checked . ' />';
+            echo esc_html($page->post_title);
+            echo '</label><br />';
+        }
+    
+        echo '</div>';
     }
+    
     
 
     // --- Menu items Metabox ---
@@ -187,17 +221,12 @@ class MPD_Metaboxes {
         }
 
         
-        // Pages
-        if (isset($_POST['mpd_menu_pages'])) {
+        // Pages sélectionnées
+        if (isset($_POST['mpd_menu_pages']) && is_array($_POST['mpd_menu_pages'])) {
             $pages = array_map('intval', $_POST['mpd_menu_pages']);
             update_post_meta($post_id, '_mpd_menu_pages', $pages);
         } else {
             delete_post_meta($post_id, '_mpd_menu_pages');
-        }
-
-        // Menu items
-        if (get_post_type($post_id) !== 'mpd_menu') {
-            return;
         }
 
         // Récupérer les tableaux envoyés
